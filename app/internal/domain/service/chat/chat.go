@@ -20,7 +20,7 @@ func NewChatService(chatStorage *postgresql.ChatStorage, userStorage *postgresql
 }
 
 func (c Service) Create(ctx context.Context, dto CreateChatDTO) (int, error) {
-	exists, err := c.chatStorage.IsExists(ctx, dto.Name)
+	exists, err := c.chatStorage.IsExistsByName(ctx, dto.Name)
 	if err != nil {
 		return 0, err
 	}

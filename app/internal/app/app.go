@@ -14,12 +14,16 @@ import (
 	"messenger-rest-api/app/internal/config"
 	v1 "messenger-rest-api/app/internal/controllers/http/v1"
 	"messenger-rest-api/app/internal/domain/service/chat"
+	"messenger-rest-api/app/internal/domain/service/message"
 	"messenger-rest-api/app/internal/domain/service/user"
 	"messenger-rest-api/app/pkg/client/postgresql"
 	"net"
 	"net/http"
 	"time"
 )
+
+// TODO: ERROR HANDLING
+// TODO: SWAGGER DOCUMENTATION
 
 type App struct {
 	cfg *config.Config
@@ -57,6 +61,11 @@ func NewApp(ctx context.Context, config *config.Config) (App, error) {
 	chatService := chat.NewChatService(chatStorage, userStorage)
 	chatHandler := v1.NewChatHandler(chatService)
 	chatHandler.Register(router)
+
+	messageStorage := postgresql2.NewMessageStorage(pgClient)
+	messageService := message.NewMessageService(messageStorage, userStorage, chatStorage)
+	messageHandler := v1.NewMessageHandler(messageService)
+	messageHandler.Register(router)
 
 	return App{
 		cfg:      config,

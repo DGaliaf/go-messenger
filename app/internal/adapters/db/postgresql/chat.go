@@ -166,7 +166,54 @@ func (c ChatStorage) FindUserChats(ctx context.Context, id string) ([]entities.C
 	return chats, nil
 }
 
-func (c ChatStorage) IsExists(ctx context.Context, name string) (bool, error) {
+func (c ChatStorage) GetMessages(ctx context.Context, id int) ([]entities.Message, error) {
+	acquire, err := c.db.Acquire(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer acquire.Release()
+
+	sql := `SELECT * FROM public.message WHERE chat_id=$1 ORDER BY created_at DESC`
+	query, err := acquire.Query(ctx, sql, id)
+	if err != nil {
+		return nil, err
+	}
+
+	messages := make([]entities.Message, 0)
+	for query.Next() {
+		message := entities.Message{}
+
+		if err := query.Scan(&message.Id, &message.ChatID, &message.AuthorID, &message.Text, &message.CreatedAt); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				// TODO: Error handling
+				return nil, err
+			}
+
+			return nil, err
+		}
+
+		messages = append(messages, message)
+	}
+
+	return messages, nil
+}
+
+func (c ChatStorage) IsExistsByID(ctx context.Context, id int) (bool, error) {
+	count := new(int)
+	sql := `SELECT COUNT(id) FROM public.chat WHERE id=$1`
+
+	if err := c.db.QueryRow(ctx, sql, id).Scan(count); err != nil {
+		return false, err
+	}
+
+	if *count > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (c ChatStorage) IsExistsByName(ctx context.Context, name string) (bool, error) {
 	count := new(int)
 	sql := `SELECT COUNT(id) FROM public.chat WHERE name=$1`
 
