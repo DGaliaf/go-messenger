@@ -1,8 +1,8 @@
 package dto
 
 type CreateChatDTO struct {
-	Name    string   `json:"name"`
-	UsersID []string `json:"users"`
+	Name    string   `json:"name"`  // Chat Name
+	UsersID []string `json:"users"` // User IDs (UUIDs)
 }
 
 type ShowChatIdDTO struct {

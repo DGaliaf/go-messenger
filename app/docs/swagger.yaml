@@ -1,4 +1,244 @@
+basePath: /
+definitions:
+  dto.CreateChatDTO:
+    properties:
+      name:
+        description: Chat Name
+        type: string
+      users:
+        description: User IDs (UUIDs)
+        items:
+          type: string
+        type: array
+    type: object
+  dto.CreateMessageDTO:
+    properties:
+      author_id:
+        description: Author ID (UUID)
+        type: string
+      chat_id:
+        type: integer
+      text:
+        type: string
+    type: object
+  dto.CreateUserDTO:
+    properties:
+      username:
+        type: string
+    type: object
+  dto.GetMessagesFromChatDTO:
+    properties:
+      chat_id:
+        type: integer
+    type: object
+  dto.GetUserDTO:
+    properties:
+      user_id:
+        description: UserID (UUID)
+        type: string
+    type: object
+  dto.ShowChatIdDTO:
+    properties:
+      chat_id:
+        type: integer
+    type: object
+  dto.ShowMessageIdDTO:
+    properties:
+      message_id:
+        type: integer
+    type: object
+  dto.ShowUserIdDTO:
+    properties:
+      user_id:
+        description: UserID (UUID)
+        type: string
+    type: object
+  entities.Chat:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/entities.User'
+        type: array
+    type: object
+  entities.Message:
+    properties:
+      author_id:
+        description: AuthorID (UUID)
+        type: string
+      chat_id:
+        type: integer
+      created_at:
+        type: string
+      message_id:
+        type: integer
+      text:
+        type: string
+    type: object
+  entities.User:
+    properties:
+      created_at:
+        type: string
+      id:
+        description: User ID (UUID)
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:9000
 info:
   contact: {}
-paths: {}
+  description: This is a sample messenger service.
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /chats/add:
+    post:
+      consumes:
+      - application/json
+      description: create chat with specific name and users
+      parameters:
+      - description: Chat
+        in: body
+        name: chat
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateChatDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ShowChatIdDTO'
+        "400":
+          description: Bad Request
+        "418":
+          description: I'm a teapot
+        "500":
+          description: Internal Server Error
+      summary: Create Chat
+      tags:
+      - chat
+  /chats/get/:
+    post:
+      consumes:
+      - application/json
+      description: find all chats where our user is participated
+      parameters:
+      - description: User ID
+        in: body
+        name: user_id
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetUserDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Chat'
+            type: array
+        "400":
+          description: Bad Request
+        "418":
+          description: I'm a teapot
+        "500":
+          description: Internal Server Error
+      summary: Find User Chats
+      tags:
+      - chat
+  /messages/add:
+    post:
+      consumes:
+      - application/json
+      description: send message to chat
+      parameters:
+      - description: Message
+        in: body
+        name: message
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMessageDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ShowMessageIdDTO'
+        "400":
+          description: Bad Request
+        "418":
+          description: I'm a teapot
+        "500":
+          description: Internal Server Error
+      summary: Send Message
+      tags:
+      - message
+  /messages/get:
+    post:
+      consumes:
+      - application/json
+      description: get message from chat
+      parameters:
+      - description: Chat ID
+        in: body
+        name: chat_id
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetMessagesFromChatDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entities.Message'
+            type: array
+        "400":
+          description: Bad Request
+        "418":
+          description: I'm a teapot
+        "500":
+          description: Internal Server Error
+      summary: Get Message
+      tags:
+      - message
+  /users/add/:
+    post:
+      consumes:
+      - application/json
+      description: create user
+      parameters:
+      - description: Username
+        in: body
+        name: username
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ShowUserIdDTO'
+        "400":
+          description: Bad Request
+        "418":
+          description: I'm a teapot
+        "500":
+          description: Internal Server Error
+      summary: Create User
+      tags:
+      - user
 swagger: "2.0"

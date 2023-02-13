@@ -2,7 +2,7 @@ package dto
 
 type CreateMessageDTO struct {
 	ChatID   int    `json:"chat_id"`
-	AuthorID string `json:"author_id"`
+	AuthorID string `json:"author_id"` // Author ID (UUID)
 	Text     string `json:"text"`
 }
 

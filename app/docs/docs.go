@@ -15,17 +15,378 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/chats/add": {
+            "post": {
+                "description": "create chat with specific name and users",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Create Chat",
+                "parameters": [
+                    {
+                        "description": "Chat",
+                        "name": "chat",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateChatDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ShowChatIdDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "418": {
+                        "description": "I'm a teapot"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/chats/get/": {
+            "post": {
+                "description": "find all chats where our user is participated",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Find User Chats",
+                "parameters": [
+                    {
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetUserDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Chat"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "418": {
+                        "description": "I'm a teapot"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/messages/add": {
+            "post": {
+                "description": "send message to chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message"
+                ],
+                "summary": "Send Message",
+                "parameters": [
+                    {
+                        "description": "Message",
+                        "name": "message",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateMessageDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ShowMessageIdDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "418": {
+                        "description": "I'm a teapot"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/messages/get": {
+            "post": {
+                "description": "get message from chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "message"
+                ],
+                "summary": "Get Message",
+                "parameters": [
+                    {
+                        "description": "Chat ID",
+                        "name": "chat_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.GetMessagesFromChatDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entities.Message"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "418": {
+                        "description": "I'm a teapot"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/users/add/": {
+            "post": {
+                "description": "create user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Create User",
+                "parameters": [
+                    {
+                        "description": "Username",
+                        "name": "username",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateUserDTO"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ShowUserIdDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "418": {
+                        "description": "I'm a teapot"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.CreateChatDTO": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Chat Name",
+                    "type": "string"
+                },
+                "users": {
+                    "description": "User IDs (UUIDs)",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "dto.CreateMessageDTO": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "description": "Author ID (UUID)",
+                    "type": "string"
+                },
+                "chat_id": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateUserDTO": {
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GetMessagesFromChatDTO": {
+            "type": "object",
+            "properties": {
+                "chat_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.GetUserDTO": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "description": "UserID (UUID)",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ShowChatIdDTO": {
+            "type": "object",
+            "properties": {
+                "chat_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ShowMessageIdDTO": {
+            "type": "object",
+            "properties": {
+                "message_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ShowUserIdDTO": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "description": "UserID (UUID)",
+                    "type": "string"
+                }
+            }
+        },
+        "entities.Chat": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entities.User"
+                    }
+                }
+            }
+        },
+        "entities.Message": {
+            "type": "object",
+            "properties": {
+                "author_id": {
+                    "description": "AuthorID (UUID)",
+                    "type": "string"
+                },
+                "chat_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "message_id": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "description": "User ID (UUID)",
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:9000",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Swagger Example API",
+	Description:      "This is a sample messenger service.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

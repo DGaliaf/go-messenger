@@ -2,9 +2,10 @@ package chat
 
 import (
 	"context"
-	"errors"
 	"messenger-rest-api/app/internal/adapters/db/postgresql"
 	"messenger-rest-api/app/internal/domain/entities"
+	"messenger-rest-api/app/internal/errors"
+	"messenger-rest-api/app/pkg/utils"
 )
 
 type Service struct {
@@ -26,18 +27,15 @@ func (c Service) Create(ctx context.Context, dto CreateChatDTO) (int, error) {
 	}
 
 	if exists {
-		// TODO: ERROR Handling
-		return 0, errors.New("duplicate")
+		return 0, custom_error.ErrChatDuplicate
 	}
 
 	if len(dto.UsersID) < 2 {
-		// TODO: ERROR Handling
-		return 0, errors.New("not enough users")
+		return 0, custom_error.ErrNotEnoughUsers
 	}
 
-	if containDuplicates(dto.UsersID) {
-		// TODO: ERROR Handling
-		return 0, errors.New("contain users with the same ID")
+	if utils.ContainDuplicates(dto.UsersID) {
+		return 0, custom_error.ErrUserAlreadyInChat
 	}
 
 	chat := entities.Chat{
@@ -50,30 +48,12 @@ func (c Service) Create(ctx context.Context, dto CreateChatDTO) (int, error) {
 func (c Service) FindUserChats(ctx context.Context, id string) ([]entities.Chat, error) {
 	exists, err := c.userStorage.IsExistsByID(ctx, id)
 	if err != nil {
-		// TODO: Error Handling
 		return nil, err
 	}
 
 	if !exists {
-		// TODO: Error Handling
-		return nil, errors.New("user does not exists")
+		return nil, custom_error.ErrUserNotExist
 	}
 
 	return c.chatStorage.FindUserChats(ctx, id)
-}
-
-func containDuplicates[T comparable](data []T) bool {
-	counts := make(map[T]int)
-
-	for _, d := range data {
-		counts[d]++
-	}
-
-	for _, val := range counts {
-		if val > 1 {
-			return true
-		}
-	}
-
-	return false
 }

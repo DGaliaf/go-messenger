@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"errors"
 	"messenger-rest-api/app/internal/adapters/db/postgresql"
 	"messenger-rest-api/app/internal/domain/entities"
+	custom_error "messenger-rest-api/app/internal/errors"
 )
 
 type Service struct {
@@ -22,8 +22,7 @@ func (u Service) Create(ctx context.Context, dto CreateUserDTO) (string, error) 
 	}
 
 	if exists {
-		// TODO: ERROR Handling
-		return "", errors.New("duplicate")
+		return "", custom_error.ErrUserDuplicate
 	}
 
 	user := entities.User{

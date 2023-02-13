@@ -7,6 +7,12 @@ import (
 	"messenger-rest-api/app/internal/config"
 )
 
+// @title           Swagger Example API
+// @version         1.0
+// @description     This is a sample messenger service.
+
+// @host      localhost:9000
+// @BasePath  /
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

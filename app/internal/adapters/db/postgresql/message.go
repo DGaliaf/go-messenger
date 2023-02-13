@@ -6,6 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"messenger-rest-api/app/internal/domain/entities"
+	"messenger-rest-api/app/internal/errors"
 )
 
 type MessageStorage struct {
@@ -21,7 +22,7 @@ func (m MessageStorage) Create(ctx context.Context, message entities.Message) (i
 
 	acquire, err := m.db.Acquire(ctx)
 	if err != nil {
-		return 0, err
+		return 0, custom_error.ErrAcquireConnection
 	}
 	defer acquire.Release()
 
@@ -29,8 +30,7 @@ func (m MessageStorage) Create(ctx context.Context, message entities.Message) (i
 
 	if err := acquire.QueryRow(ctx, sql, message.ChatID, message.AuthorID, message.Text).Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			// TODO: Error handling
-			return 0, err
+			return 0, custom_error.ErrEntityNotFound
 		}
 
 		return 0, err

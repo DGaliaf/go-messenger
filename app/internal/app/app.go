@@ -22,7 +22,6 @@ import (
 	"time"
 )
 
-// TODO: ERROR HANDLING
 // TODO: SWAGGER DOCUMENTATION
 
 type App struct {

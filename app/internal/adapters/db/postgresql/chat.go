@@ -7,6 +7,7 @@ import (
 	_ "github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"messenger-rest-api/app/internal/domain/entities"
+	"messenger-rest-api/app/internal/errors"
 )
 
 type ChatStorage struct {
@@ -18,29 +19,25 @@ func NewChatStorage(db *pgxpool.Pool) *ChatStorage {
 }
 
 func (c ChatStorage) Create(ctx context.Context, chat entities.Chat, usersID []string) (int, error) {
-	id := new(int)
+	var id int
 
 	acquire, err := c.db.Acquire(ctx)
 	if err != nil {
-		return 0, err
+		return 0, custom_error.ErrAcquireConnection
 	}
 	defer acquire.Release()
 
 	tx, err := acquire.Begin(ctx)
 	if err != nil {
-		// TODO: Error handling
-		return 0, err
+		return 0, custom_error.ErrCreateTransaction
 	}
 
 	defer tx.Rollback(ctx)
 
 	sql := `INSERT INTO public.chat(name) VALUES ($1) RETURNING id`
-	if err := tx.QueryRow(ctx, sql, chat.Name).Scan(id); err != nil {
-		//TODO: NoRows
-
+	if err := tx.QueryRow(ctx, sql, chat.Name).Scan(&id); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			// TODO: Error handling
-			return 0, err
+			return 0, custom_error.ErrEntityNotFound
 		}
 
 		return 0, err
@@ -50,56 +47,50 @@ func (c ChatStorage) Create(ctx context.Context, chat entities.Chat, usersID []s
 		sql = `INSERT INTO public.user_chat(user_id, chat_id) VALUES ($1,$2)`
 		res, err := tx.Exec(ctx, sql, userID, id)
 		if err != nil {
-			return 0, err
+			return 0, custom_error.ErrSQLExecution
 		}
 
 		if res.RowsAffected() == 0 {
-			// TODO: NoRowsAffected
-			return 0, errors.New("no rows affected")
+			return 0, custom_error.ErrNoRowsAffected
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		if errors.Is(err, pgx.ErrTxClosed) {
-			// TODO: Tx Already closed
-			return 0, err
+			return 0, custom_error.ErrTransactionClosed
 		}
 
 		if errors.Is(err, pgx.ErrTxCommitRollback) {
-			// TODO: Fail to commit changes
-			return 0, err
+			return 0, custom_error.ErrCommitTransaction
 		}
 
 		return 0, err
 	}
 
-	return *id, nil
+	return id, nil
 }
 
 func (c ChatStorage) FindUserChats(ctx context.Context, id string) ([]entities.Chat, error) {
 	acquire, err := c.db.Acquire(ctx)
 	if err != nil {
-		// TODO: Error handling
-		return nil, err
+		return nil, custom_error.ErrAcquireConnection
 	}
 
 	sql := `SELECT chat_id FROM public.user_chat WHERE user_id=$1`
 	chatQuery, err := acquire.Query(ctx, sql, id)
 	if err != nil {
-		// TODO: Error handling
-		return nil, err
+		return nil, custom_error.ErrSQLExecution
 	}
 
 	chatsIDs := make([]int, 0)
 	for chatQuery.Next() {
-		chatID := new(int)
+		var chatID int
 
-		if err := chatQuery.Scan(chatID); err != nil {
-			// TODO: Error handling
+		if err := chatQuery.Scan(&chatID); err != nil {
 			return nil, err
 		}
 
-		chatsIDs = append(chatsIDs, *chatID)
+		chatsIDs = append(chatsIDs, chatID)
 	}
 
 	chatQuery.Close()
@@ -109,33 +100,33 @@ func (c ChatStorage) FindUserChats(ctx context.Context, id string) ([]entities.C
 	for _, chatID := range chatsIDs {
 		acquire, err = c.db.Acquire(ctx)
 		if err != nil {
-			// TODO: Error handling
-			return nil, err
+			return nil, custom_error.ErrAcquireConnection
 		}
 
 		sql = `SELECT user_id FROM public.user_chat WHERE chat_id=$1`
 		userQuery, err := acquire.Query(ctx, sql, chatID)
 		if err != nil {
-			// TODO: Error handling
-			return nil, err
+			return nil, custom_error.ErrSQLExecution
 		}
 
 		userIDs := make([]string, 0)
 		for userQuery.Next() {
-			userID := new(string)
+			var userID string
 
-			if err := userQuery.Scan(userID); err != nil {
-				// TODO: Error handling
+			if err := userQuery.Scan(&userID); err != nil {
 				return nil, err
 			}
 
-			userIDs = append(userIDs, *userID)
+			userIDs = append(userIDs, userID)
 		}
 
 		userQuery.Close()
 		acquire.Release()
 
 		acquire, err = c.db.Acquire(ctx)
+		if err != nil {
+			return nil, custom_error.ErrAcquireConnection
+		}
 
 		users := make([]entities.User, 0)
 		for _, userID := range userIDs {
@@ -143,7 +134,10 @@ func (c ChatStorage) FindUserChats(ctx context.Context, id string) ([]entities.C
 			sql = `SELECT * FROM public.user WHERE id=$1`
 
 			if err := acquire.QueryRow(ctx, sql, userID).Scan(&user.ID, &user.Username, &user.CreatedAt); err != nil {
-				// TODO: Error handling
+				if errors.Is(err, pgx.ErrNoRows) {
+					return nil, custom_error.ErrEntityNotFound
+				}
+
 				return nil, err
 			}
 
@@ -153,7 +147,10 @@ func (c ChatStorage) FindUserChats(ctx context.Context, id string) ([]entities.C
 		chat := entities.Chat{}
 		sql = `SELECT * FROM public.chat WHERE id=$1`
 		if err := acquire.QueryRow(ctx, sql, chatID).Scan(&chat.ID, &chat.Name, &chat.CreatedAt); err != nil {
-			// TODO: Error handling
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, custom_error.ErrEntityNotFound
+			}
+
 			return nil, err
 		}
 
@@ -169,14 +166,14 @@ func (c ChatStorage) FindUserChats(ctx context.Context, id string) ([]entities.C
 func (c ChatStorage) GetMessages(ctx context.Context, id int) ([]entities.Message, error) {
 	acquire, err := c.db.Acquire(ctx)
 	if err != nil {
-		return nil, err
+		return nil, custom_error.ErrAcquireConnection
 	}
 	defer acquire.Release()
 
 	sql := `SELECT * FROM public.message WHERE chat_id=$1 ORDER BY created_at DESC`
 	query, err := acquire.Query(ctx, sql, id)
 	if err != nil {
-		return nil, err
+		return nil, custom_error.ErrSQLExecution
 	}
 
 	messages := make([]entities.Message, 0)
@@ -184,11 +181,6 @@ func (c ChatStorage) GetMessages(ctx context.Context, id int) ([]entities.Messag
 		message := entities.Message{}
 
 		if err := query.Scan(&message.Id, &message.ChatID, &message.AuthorID, &message.Text, &message.CreatedAt); err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				// TODO: Error handling
-				return nil, err
-			}
-
 			return nil, err
 		}
 
@@ -199,14 +191,18 @@ func (c ChatStorage) GetMessages(ctx context.Context, id int) ([]entities.Messag
 }
 
 func (c ChatStorage) IsExistsByID(ctx context.Context, id int) (bool, error) {
-	count := new(int)
+	var count int
 	sql := `SELECT COUNT(id) FROM public.chat WHERE id=$1`
 
-	if err := c.db.QueryRow(ctx, sql, id).Scan(count); err != nil {
+	if err := c.db.QueryRow(ctx, sql, id).Scan(&count); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, custom_error.ErrEntityNotFound
+		}
+
 		return false, err
 	}
 
-	if *count > 0 {
+	if count > 0 {
 		return true, nil
 	}
 
@@ -214,14 +210,18 @@ func (c ChatStorage) IsExistsByID(ctx context.Context, id int) (bool, error) {
 }
 
 func (c ChatStorage) IsExistsByName(ctx context.Context, name string) (bool, error) {
-	count := new(int)
-	sql := `SELECT COUNT(id) FROM public.chat WHERE name=$1`
+	var count int
 
-	if err := c.db.QueryRow(ctx, sql, name).Scan(count); err != nil {
+	sql := `SELECT COUNT(id) FROM public.chat WHERE name=$1`
+	if err := c.db.QueryRow(ctx, sql, name).Scan(&count); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return false, custom_error.ErrEntityNotFound
+		}
+
 		return false, err
 	}
 
-	if *count > 0 {
+	if count > 0 {
 		return true, nil
 	}
 
