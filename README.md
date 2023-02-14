@@ -22,7 +22,7 @@ The following technologies were used in the development of this project:
 
 ## Installation
 
-Dillinger requires [Golang](https://go.dev/dl/) v1.20.0+ to run.
+Go Messenger requires [Golang](https://go.dev/dl/) v1.20.0+ to run.
 
 - Install and start PostgreSQL
 - Change configuration file `/configs/config.local.yml`
@@ -58,7 +58,7 @@ docker-compose up --build
 
 > This command will build the Go application using the Dockerfile and start two containers: one for the HTTP server and one for Postgres. The --build flag ensures that the latest version of the application is built before starting the containers.
 
-Once the application is running, you should be able to access it in your web browser by navigating to http://localhost:9000. The HTTP server is running on port 9000, which is mapped to the container's port 8080 in the docker-compose.yml file.
+Once the application is running, you should be able to access it in your web browser by navigating to http://localhost:9000. The HTTP server is running on port 9000, which is mapped to the container's port 9000 in the docker-compose.yml file.
 
 ##### Stop the Application
 To stop the application and remove the containers, press Ctrl-C in the terminal where docker-compose up is running. Alternatively, you can run the following command in the same directory as the docker-compose.yml file:
