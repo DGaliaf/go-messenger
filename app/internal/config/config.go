@@ -1,50 +1,35 @@
 package config
 
 import (
-	"flag"
 	"github.com/ilyakaznacheev/cleanenv"
 	"log"
-	"os"
 	"sync"
 )
 
 type Config struct {
 	HTTP struct {
-		IP   string `yaml:"ip" env:"HTTP-IP"`
-		Port int    `yaml:"port" env:"HTTP-PORT"`
+		IP   string `yaml:"ip" env:"HTTP_IP" env-default:"localhost"`
+		Port int    `yaml:"port" env:"HTTP_PORT" env-default:"9000"`
 	} `yaml:"http"`
 	PostgreSQL struct {
-		Username string `yaml:"username" env:"PSQL_USERNAME" env-required:"true"`
-		Password string `yaml:"password" env:"PSQL_PASSWORD" env-required:"true"`
-		Host     string `yaml:"host" env:"PSQL_HOST" env-required:"true"`
-		Port     string `yaml:"port" env:"PSQL_PORT" env-required:"true"`
-		Database string `yaml:"database" env:"PSQL_DATABASE" env-required:"true"`
+		Username string `yaml:"username" env:"POSTGRES_USER" env-required:"true" env-default:"postgres"`
+		Password string `yaml:"password" env:"POSTGRES_PASSWORD" env-required:"true" env-default:"postgres"`
+		Host     string `yaml:"host" env:"POSTGRES_HOST" env-required:"true" env-default:"0.0.0.0"`
+		Port     string `yaml:"port" env:"POSTGRES_PORT" env-required:"true" env-default:"5432"`
+		Database string `yaml:"database" env:"POSTGRES_DB" env-required:"true" env-default:"postgres"`
 	} `yaml:"postgresql"`
 }
 
 const (
-	EnvConfigPathName  = "CONFIG-PATH"
-	FlagConfigPathName = "config"
+	configPath = "./configs/config.local.yml"
 )
 
-var configPath string
 var instance *Config
 var once sync.Once
 
 func GetConfig() *Config {
 	once.Do(func() {
-		flag.StringVar(&configPath, FlagConfigPathName, "configs/config.local.yml", "this is app config file")
-		flag.Parse()
-
 		log.Print("config init")
-
-		if configPath == "" {
-			configPath = os.Getenv(EnvConfigPathName)
-		}
-
-		if configPath == "" {
-			log.Fatal("config path is required")
-		}
 
 		instance = &Config{}
 

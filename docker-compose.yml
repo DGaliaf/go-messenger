@@ -1,26 +1,46 @@
 version: "3.9"
 
 services:
-  http:
+  server:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "9000:8080"
+    container_name: "go_app"
+    restart: on-failure
     depends_on:
       - postgres
     environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: "5432"
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      - HTTP_IP=0.0.0.0
+      - HTTP_PORT=9000
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    tty: true
+    networks:
+      - app_network
+    ports:
+      - "9000:9000"
 
   postgres:
     image: postgres
-    ports:
-      - "5432:5432"
+    restart: always
+    container_name: "postgres_db"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    ports:
+      - "5432:5432/tcp"
+    volumes:
+      - data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+volumes:
+  data:
+
+networks:
+  app_network:
+    driver: bridge

@@ -22,8 +22,6 @@ import (
 	"time"
 )
 
-// TODO: SWAGGER DOCUMENTATION
-
 type App struct {
 	cfg *config.Config
 
