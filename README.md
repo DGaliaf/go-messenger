@@ -39,14 +39,14 @@ go run app/cmd/app/main.go
 ##### Prerequisites
 Make sure you have Docker and Docker Compose installed on your machine. You can download Docker Desktop from the official website for your operating system.
 
-##### Environment Variables
+#####Environment Variables
 Before running the application, you'll need to set some environment variables in the docker-compose.yml file. The following environment variables are used in the provided configuration:
 
-- `POSTGRES_HOST`: the hostname or IP address of the Postgres database
-- `POSTGRES_PORT`: the port number on which Postgres is listening
-- `POSTGRES_USER`: the username for the Postgres user
-- `POSTGRES_PASSWORD`: the password for the Postgres user
-- `POSTGRES_DB`: the name of the Postgres database to use
+`POSTGRES_HOST`: the hostname or IP address of the Postgres database
+`POSTGRES_PORT`: the port number on which Postgres is listening
+`POSTGRES_USER`: the username for the Postgres user
+`POSTGRES_PASSWORD`: the password for the Postgres user
+`POSTGRES_DB`: the name of the Postgres database to use
 > You can set these environment variables in the docker-compose.yml file or in your shell environment.
 
 ##### Build and Run the Application
