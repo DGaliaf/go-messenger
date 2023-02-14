@@ -1,0 +1,15 @@
+.git
+.gitignore
+.DS_Store
+.idea
+.vscode
+*.log
+*.swp
+node_modules
+build
+dist
+tmp
+vendor
+README.md
+LICENSE
+configs

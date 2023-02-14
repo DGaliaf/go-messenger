@@ -1,0 +1,12 @@
+.idea
+.idea/*
+.DS_Store
+*.o
+*.a
+*.so
+_obj
+_test
+*.[568vq]
+[568vq].out
+*.test
+*.prof
